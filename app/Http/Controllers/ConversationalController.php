@@ -38,7 +38,7 @@ class ConversationalController extends Controller
                                 'text' => "Aja como um analista de BI, e me de um resumo sobre o dashboard na imagem, me de uma resposta de um modo que fique formatado para envio no whatsapp lembrando que negrito no whatsapp usa apenas um asterisco e nao 2, pode usar emojis nos topicos, e também que fique como um assistente enviando as informações, iniciando como 'Segue o resumo de leads' e depois complete com as informacoes do seguinte template
                                 Olá!
 
-                                Este é o relatório de performance de sua operação no dia de hoje, 24 de Maio de 2024.
+                                Este é o relatório de performance de sua operação no dia de hoje, XX de XX de 2024.
 
                                 Vamos lá:
                                 Novos Leads Hoje
