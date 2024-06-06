@@ -45,7 +45,7 @@ class ConversationalController extends Controller
                                 112
 
                                 Importante você saber:
-                                O dia de hoje foi 8,7% melhor que a média das últimas terça-feiras dos últimos 2 meses. ↗
+                                O dia de hoje foi XX melhor que a média das últimas XX dos últimos XX meses. ↗
 
                                 Visão Geral do Funil
                                 🔘 Trabalhados:
