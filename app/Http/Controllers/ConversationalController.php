@@ -35,7 +35,28 @@ class ConversationalController extends Controller
                         'content' => [
                             [
                                 'type' => 'text',
-                                'text' => "Aja como um analista de BI, e me de um resumo sobre o dashboard na imagem, me de uma resposta de um modo que fique formatado para envio no whatsapp lembrando que negrito no whatsapp usa apenas um asterisco e nao 2, pode usar emojis nos topicos, e também que fique como um assistente enviando as informações, iniciando como 'Segue o resumo de leads' e depois complete com as informacoes, Observe que o grafico Quantidade de oportunidades esta dia e quantidade de oportunidade do dia, no grafico tem somente o dia 2 de janeiro e depois os dias do mes de maio"
+                                'text' => "Aja como um analista de BI, e me de um resumo sobre o dashboard na imagem, me de uma resposta de um modo que fique formatado para envio no whatsapp lembrando que negrito no whatsapp usa apenas um asterisco e nao 2, pode usar emojis nos topicos, e também que fique como um assistente enviando as informações, iniciando como 'Segue o resumo de leads' e depois complete com as informacoes do seguinte template
+                                Olá!
+
+                                Este é o relatório de performance de sua operação no dia de hoje, 24 de Maio de 2024.
+
+                                Vamos lá:
+                                Novos Leads Hoje
+                                112
+
+                                Importante você saber:
+                                O dia de hoje foi 8,7% melhor que a média das últimas terça-feiras dos últimos 2 meses. ↗
+
+                                Visão Geral do Funil
+                                🔘 Trabalhados:
+                                🔘 Qualificados:
+                                🔘 Agendados:
+                                🔘 Vendidos:*
+
+                                Se quiser saber mais detalhes, basta me perguntar. 💬😉
+
+
+                                "
                             ],
                             [
                                 'type' => 'image_url',
