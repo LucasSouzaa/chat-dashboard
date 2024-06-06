@@ -16,66 +16,45 @@ class ConversationalController extends Controller
     {
 
         try {
+            $apiKey = config('twilio.open_ai_token');
+            $imagePath = "/var/www/html/public/captureWIthChrome.png";
+            $base64Image = base64_encode(file_get_contents($imagePath));
 
-            $result = Cache::rememberForever('conversationalabc5', function () {
+            $client = new HttpClient();
 
-                $browser = (new BrowserFactory()) -> createBrowser();
+            $headers = [
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer $apiKey",
+            ];
 
-                $urlToCapture = "https://app.powerbi.com/view?r=eyJrIjoiMDM2ZTJjNzItNWYwYy00ZjFlLWI4ZmQtMGQ4Y2FkNmNmMjU1IiwidCI6IjMxMTI4Zjg1LTlmMmUtNDhmNi05NDg0LTBjOWMzY2UzZTUzNiJ9";
-
-                $page = $browser -> createPage();
-                $page -> setViewport(1920, 1080);
-                $page -> navigate($urlToCapture)->waitForNavigation();
-
-                sleep(3);
-
-                $screenshot = $page -> screenshot();
-                $screenshot -> saveToFile("/var/www/html/public/captureWIthChrome.png");
-
-
-                $apiKey = config('twilio.open_ai_token');
-                $imagePath = "/var/www/html/public/captureWIthChrome.png";
-                $base64Image = base64_encode(file_get_contents($imagePath));
-
-                $client = new HttpClient();
-
-                $headers = [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => "Bearer $apiKey",
-                ];
-
-                $payload = [
-                    'model' => 'gpt-4o',
-                    'messages' => [
-                        [
-                            'role' => 'user',
-                            'content' => [
-                                [
-                                    'type' => 'text',
-                                    'text' => "Aja como um analista de BI, e me de um resumo sobre o dashboard na imagem, me de uma resposta de um modo que fique formatado para envio no whatsapp lembrando que negrito no whatsapp usa apenas um asterisco e nao 2, pode usar emojis nos topicos, e também que fique como um assistente enviando as informações, iniciando como 'Segue o resumo de leads' e depois complete com as informacoes, Observe que o grafico Quantidade de oportunidades esta dia e quantidade de oportunidade do dia, no grafico tem somente o dia 2 de janeiro e depois os dias do mes de maio"
-                                ],
-                                [
-                                    'type' => 'image_url',
-                                    'image_url' => [
-                                        'url' => "data:image/jpeg;base64,$base64Image"
-                                    ]
+            $payload = [
+                'model' => 'gpt-4o',
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => [
+                            [
+                                'type' => 'text',
+                                'text' => "Aja como um analista de BI, e me de um resumo sobre o dashboard na imagem, me de uma resposta de um modo que fique formatado para envio no whatsapp lembrando que negrito no whatsapp usa apenas um asterisco e nao 2, pode usar emojis nos topicos, e também que fique como um assistente enviando as informações, iniciando como 'Segue o resumo de leads' e depois complete com as informacoes, Observe que o grafico Quantidade de oportunidades esta dia e quantidade de oportunidade do dia, no grafico tem somente o dia 2 de janeiro e depois os dias do mes de maio"
+                            ],
+                            [
+                                'type' => 'image_url',
+                                'image_url' => [
+                                    'url' => "data:image/jpeg;base64,$base64Image"
                                 ]
                             ]
                         ]
-                    ],
-                    'max_tokens' => 4096
-                ];
+                    ]
+                ],
+                'max_tokens' => 4096
+            ];
 
-                $response = $client->post('https://api.openai.com/v1/chat/completions', [
-                    'headers' => $headers,
-                    'json' => $payload,
-                ]);
+            $response = $client->post('https://api.openai.com/v1/chat/completions', [
+                'headers' => $headers,
+                'json' => $payload,
+            ]);
 
-                $result = json_decode($response->getBody()->getContents());
-
-                return $result;
-            });
-
+            $result = json_decode($response->getBody()->getContents());
 
             $twilio = new Client(config('twilio.account_sid'), config('twilio.auth_token'));
 
