@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Phone;
+use App\Services\ConversationalServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -12,6 +14,12 @@ use GuzzleHttp\Client as HttpClient;
 
 class ConversationalController extends Controller
 {
+
+
+    public function __construct(protected ConversationalServices $conversationalServices)
+    {
+    }
+
     public function sendDashboardReport()
     {
 
@@ -103,30 +111,40 @@ class ConversationalController extends Controller
     public function new_message(Request $request)
     {
 
-        $result = Cache::get('conversationalabc5');
+        if ($request->Body == "menu" || $request->Body == "Menu")
+        {
 
-        $apiKey = config('twilio.open_ai_token');
-        $client = \OpenAI::client($apiKey);
+            $apiKey = config('twilio.open_ai_token');
+            $client = \OpenAI::client($apiKey);
 
-        $result = $client->chat()->create([
-            'model' => 'gpt-4o',
-            'messages' => [
-                [
-                    'role' => 'user',
-                    'content' => 'Baseado no ultimo relatorio que me respondeu: "' . $result->choices[0]->message->content . '" agora me responda (nao precisa falar que é baseado no resumo fornecido): ' . $request->Body
-                ],
-            ],
-        ]);
+            $from = str_replace("whatsapp:", "", $request->From);
 
-        $twilio = new Client(config('twilio.account_sid'), config('twilio.auth_token'));
+            $dashboards = Phone::with('dashboards')->where('phone', $from)->first();
 
-        $message = $twilio->messages
-            ->create("whatsapp:+5516981130663", // to
-                array(
-                    "from" => "whatsapp:".config('twilio.phone_number'),
-                    "body" => str_replace("**", "*", $result->choices[0]->message->content)
-                )
-            );
+            $message = "Selecione o dashboard que deseja visualizar \n\n";
+
+            foreach($dashboards->dashboards as $key => $dashboard)
+            {
+                $message .= "*" . $key + 1 . ":* " . $dashboard->name . "\n";
+            }
+
+            $twilio = new Client(config('twilio.account_sid'), config('twilio.auth_token'));
+
+            return $twilio->messages
+                ->create("whatsapp:{$dashboards->phone}", // to
+                    array(
+                        "from" => "whatsapp:".config('twilio.phone_number'),
+                        "body" => str_replace("**", "*", $message)
+                    )
+                );
+        }
+
+        if (is_numeric($request->Body))
+        {
+            return $this->conversationalServices->sendDashboard($request, "https://app.powerbi.com/view?r=eyJrIjoiMDM2ZTJjNzItNWYwYy00ZjFlLWI4ZmQtMGQ4Y2FkNmNmMjU1IiwidCI6IjMxMTI4Zjg1LTlmMmUtNDhmNi05NDg0LTBjOWMzY2UzZTUzNiJ9");
+        }
+
+
 
         return response("ok", 200);
     }

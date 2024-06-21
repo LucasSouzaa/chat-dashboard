@@ -6,4 +6,4 @@ use Twilio\Rest\Client;
 Route::get('/',[\App\Http\Controllers\ConversationalController::class, 'sendDashboardReport']);
 
 Route::post('/new_message',[\App\Http\Controllers\ConversationalController::class, 'new_message']);
-Route::get('/status',[\App\Http\Controllers\ConversationalController::class, 'status']);
+Route::post('/status',[\App\Http\Controllers\ConversationalController::class, 'status']);
