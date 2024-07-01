@@ -115,43 +115,43 @@ class ConversationalController extends Controller
 
         $user = Phone::where('phone', $from)->first();
 
-        if (strtolower($request->Body) == "menu")
-        {
-            return $this->conversationalServices->showMenu($request, $from);
-        }
+        if ($user) {
 
-        if (isset($user->memory['messages']) && count($user->memory['messages'])) {
-            if (is_numeric($request->Body) && count($user->memory) == 1 && strtolower($user->memory['messages'][0]['message']) == 'menu')
+            if (strtolower($request->Body) == "menu")
             {
-                $user->load('dashboards');
-                $dashboard = $user->dashboards[$request->Body-1];
+                return $this->conversationalServices->showMenu($request, $from);
+            }
 
-                [$gptcontent, $imagePath] = $this->conversationalServices->sendDashboard($user, $dashboard->url, $dashboard->name);
+            if (isset($user->memory['messages']) && count($user->memory['messages'])) {
+                if (is_numeric($request->Body) && count($user->memory) == 1 && strtolower($user->memory['messages'][0]['message']) == 'menu')
+                {
+                    $user->load('dashboards');
+                    $dashboard = $user->dashboards[$request->Body-1];
 
-                $user->memory = [
-                    'urlimagedash' => $imagePath,
-                    'messages' => [['message' => 'menu', 'kind' => 'user'], ['message' => $request->Body, 'kind' => 'user'], ['message' => $gptcontent, 'kind' => 'gpt']]
-                ];
+                    [$gptcontent, $imagePath] = $this->conversationalServices->sendDashboard($user, $dashboard->url, $dashboard->name);
+
+                    $user->memory = [
+                        'urlimagedash' => $imagePath,
+                        'messages' => [['message' => 'menu', 'kind' => 'user'], ['message' => $request->Body, 'kind' => 'user'], ['message' => $gptcontent, 'kind' => 'gpt']]
+                    ];
+                    return $user->save();
+                }
+
+                $memory = $user->memory['messages'];
+                array_push($memory, ['message' => $request->Body, 'kind' => 'user']);
+
+                $gptmessage = $this->conversationalServices->talkToGPT($user, $user->memory['urlimagedash'], $memory);
+
+                array_push($memory, ['message' => $gptmessage, 'kind' => 'gpt']);
+
+                $user->memory = $memory;
+
                 return $user->save();
             }
 
-            $memory = $user->memory['messages'];
-            array_push($memory, ['message' => $request->Body, 'kind' => 'user']);
+            return $this->conversationalServices->showMenu($request, $from, true);
 
-            $gptmessage = $this->conversationalServices->talkToGPT($user, $user->memory['urlimagedash'], $memory);
-
-            array_push($memory, ['message' => $gptmessage, 'kind' => 'gpt']);
-
-            $user->memory = $memory;
-
-            return $user->save();
         }
-
-        return $this->conversationalServices->showMenu($request, $from, true);
-
-
-
-
 
         return response("ok", 200);
     }
