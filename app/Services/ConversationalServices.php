@@ -54,7 +54,7 @@ class ConversationalServices
         $page -> setViewport(1920, 1080);
         $page -> navigate($urlToCapture)->waitForNavigation();
 
-        sleep(3);
+        sleep(10);
 
         $namefile = $id . "_dashprint.png";
 
