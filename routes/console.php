@@ -15,7 +15,7 @@ Artisan::command('generate:dashs', function () {
         $page -> setViewport(1920, 1080);
         $page -> navigate($dashboard->url)->waitForNavigation();
 
-        sleep(10);
+        sleep(5);
 
         $namefile = $dashboard->id . "_dashprint.png";
 
@@ -25,3 +25,13 @@ Artisan::command('generate:dashs', function () {
 
     $page->close();
 })->purpose('generate cash images')->hourly();
+
+Artisan::command('send:report', function (\App\Services\ConversationalServices $conversationalServices) {
+
+    $users = \App\Models\Phone::with('dashboards')->get();
+    foreach ($users as $user) {
+        foreach ($user->dashboards as $dashboard) {
+            $conversationalServices->sendDashboard($user,  "", $dashboard->name, $dashboard->id);
+        }
+    }
+})->dailyAt("19:00:00");
