@@ -128,7 +128,7 @@ class ConversationalController extends Controller
                     $user->load('dashboards');
                     $dashboard = $user->dashboards[$request->Body-1];
 
-                    [$gptcontent, $imagePath] = $this->conversationalServices->sendDashboard($user, $dashboard->url, $dashboard->name);
+                    [$gptcontent, $imagePath] = $this->conversationalServices->sendDashboard($user, $dashboard->url, $dashboard->name, $dashboard->id);
 
                     $user->memory = [
                         'urlimagedash' => $imagePath,

@@ -45,7 +45,7 @@ class ConversationalServices
             );
     }
 
-    public function sendDashboard($user, $urlToCapture, $name)
+    public function sendDashboard($user, $urlToCapture, $name, $id)
     {
 
         $browser = (new BrowserFactory()) -> createBrowser();
@@ -56,7 +56,7 @@ class ConversationalServices
 
         sleep(1);
 
-        $namefile = now()->timestamp . "dashprint.png";
+        $namefile = $id . "_dashprint.png";
 
         $screenshot = $page -> screenshot();
         $screenshot -> saveToFile("/var/www/html/public/$namefile");
