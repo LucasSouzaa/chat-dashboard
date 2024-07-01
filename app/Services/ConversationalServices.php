@@ -47,19 +47,7 @@ class ConversationalServices
 
     public function sendDashboard($user, $urlToCapture, $name, $id)
     {
-
-        $browser = (new BrowserFactory()) -> createBrowser();
-
-        $page = $browser -> createPage();
-        $page -> setViewport(1920, 1080);
-        $page -> navigate($urlToCapture)->waitForNavigation();
-
-        sleep(10);
-
         $namefile = $id . "_dashprint.png";
-
-        $screenshot = $page -> screenshot();
-        $screenshot -> saveToFile("/var/www/html/public/$namefile");
 
         $apiKey = config('twilio.open_ai_token');
         $imagePath = "/var/www/html/public/$namefile";
