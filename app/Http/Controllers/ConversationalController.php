@@ -147,6 +147,8 @@ class ConversationalController extends Controller
             return $user->save();
         }
 
+        return $this->conversationalServices->showMenu($request, $from, true);
+
 
 
 

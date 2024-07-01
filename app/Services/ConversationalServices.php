@@ -11,14 +11,20 @@ use GuzzleHttp\Client as HttpClient;
 class ConversationalServices
 {
 
-    public function showMenu($request, $from)
+    public function showMenu($request, $from, $invalid = false)
     {
         $apiKey = config('twilio.open_ai_token');
         $client = \OpenAI::client($apiKey);
 
         $dashboards = Phone::with('dashboards')->where('phone', $from)->first();
 
-        $message = "Selecione o dashboard que deseja visualizar \n\n";
+        $message = "";
+
+        if ($invalid) {
+            $message .= "*Opção inválida ou sessão expirada!* \n\n";
+        }
+
+        $message .= "Selecione o dashboard que deseja visualizar \n\n";
 
         foreach($dashboards->dashboards as $key => $dashboard)
         {
@@ -48,7 +54,7 @@ class ConversationalServices
         $page -> setViewport(1920, 1080);
         $page -> navigate($urlToCapture)->waitForNavigation();
 
-        sleep(3);
+        sleep(1);
 
         $namefile = now() . "dashprint.png";
 
@@ -74,25 +80,26 @@ class ConversationalServices
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => "Aja como um analista de BI, e me de um resumo sobre o dashboard na imagem, me de uma resposta de um modo que fique formatado para envio no whatsapp, preencha o template abaixo e me retorne o texto com as informacoes do seguinte dashboard enviado por imagem, SOME os 2 lados da imagem para que no resumo tenha a soma dos leads de Facebook e do Google
+                            'text' => "Aja como um analista de BI, e me de um resumo sobre o dashboard na imagem, me de uma resposta de um modo que fique formatado para envio no whatsapp, preencha o template abaixo e me retorne o texto com as informacoes do seguinte dashboard enviado por imagem, SOME os 2 lados da imagem para que no resumo tenha a soma dos leads de Facebook e do Google:
+<template>
+Segue o resumo de leads de {$name}:
 
-                                Segue o resumo de leads de {$name}:
+Olá!
 
-                                Olá!
+Este é o relatório de performance de sua operação no dia de hoje, " . now()->day . " de " . now()->month . " de 2024.
 
-                                Este é o relatório de performance de sua operação no dia de hoje, " . now()->day . " de " . now()->month . " de 2024.
+Vamos lá:
+Total de Leads
+XX
 
-                                Vamos lá:
-                                Total de Leads
-                                XX
+Visão Geral do Funil
+🔘 Trabalhados: XX (XX%)
+🔘 Qualificados: XX (XX%)
+🔘 Agendados: XX (XX%)
+🔘 Vendidos:* XX (XX%)
 
-                                Visão Geral do Funil
-                                🔘 Trabalhados: XX (XX%)
-                                🔘 Qualificados: XX (XX%)
-                                🔘 Agendados: XX (XX%)
-                                🔘 Vendidos:* XX (XX%)
-
-                                Se quiser saber mais detalhes, basta me perguntar. 💬😉"
+Se quiser saber mais detalhes, basta me perguntar. 💬😉
+</template>"
                         ],
                         [
                             'type' => 'image_url',
