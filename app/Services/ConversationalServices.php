@@ -69,7 +69,6 @@ class ConversationalServices
                         [
                             'type' => 'text',
                             'text' => "Aja como um analista de BI, e me de um resumo sobre o dashboard na imagem, me de uma resposta de um modo que fique formatado para envio no whatsapp, preencha o template abaixo e me retorne o texto com as informacoes do seguinte dashboard enviado por imagem, SOME os 2 lados da imagem para que no resumo tenha a soma dos leads de Facebook e do Google:
-<template>
 Segue o resumo de leads de {$name}:
 
 Olá!
@@ -86,8 +85,7 @@ Visão Geral do Funil
 🔘 Agendados: XX (XX%)
 🔘 Vendidos:* XX (XX%)
 
-Se quiser saber mais detalhes, basta me perguntar. 💬😉
-</template>"
+Se quiser saber mais detalhes, basta me perguntar. 💬😉"
                         ],
                         [
                             'type' => 'image_url',
