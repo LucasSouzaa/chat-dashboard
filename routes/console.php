@@ -4,7 +4,7 @@ use HeadlessChromium\BrowserFactory;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
-\Illuminate\Support\Facades\Schedule::call(function() {
+Artisan::command('generate:dashs', function () {
     $dashboards = \App\Models\Dashboard::all();
 
     $browser = (new BrowserFactory()) -> createBrowser();
@@ -24,4 +24,4 @@ use Illuminate\Support\Facades\Artisan;
     }
 
     $page->close();
-})->hourly();
+})->purpose('generate cash images')->hourly();
