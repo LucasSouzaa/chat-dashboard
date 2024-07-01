@@ -56,7 +56,7 @@ class ConversationalServices
 
         sleep(1);
 
-        $namefile = now() . "dashprint.png";
+        $namefile = now()->timestamp . "dashprint.png";
 
         $screenshot = $page -> screenshot();
         $screenshot -> saveToFile("/var/www/html/public/$namefile");
