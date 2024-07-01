@@ -111,38 +111,43 @@ class ConversationalController extends Controller
     public function new_message(Request $request)
     {
 
-        if ($request->Body == "menu" || $request->Body == "Menu")
+        $from = str_replace("whatsapp:", "", $request->From);
+
+        $user = Phone::where('phone', $from)->first();
+
+        if (strtolower($request->Body) == "menu")
         {
+            return $this->conversationalServices->showMenu($request, $from);
+        }
 
-            $apiKey = config('twilio.open_ai_token');
-            $client = \OpenAI::client($apiKey);
-
-            $from = str_replace("whatsapp:", "", $request->From);
-
-            $dashboards = Phone::with('dashboards')->where('phone', $from)->first();
-
-            $message = "Selecione o dashboard que deseja visualizar \n\n";
-
-            foreach($dashboards->dashboards as $key => $dashboard)
+        if (isset($user->memory['messages']) && count($user->memory['messages'])) {
+            if (is_numeric($request->Body) && count($user->memory) == 1 && strtolower($user->memory['messages'][0]['message']) == 'menu')
             {
-                $message .= "*" . $key + 1 . ":* " . $dashboard->name . "\n";
+                $user->load('dashboards');
+                $dashboard = $user->dashboards[$request->Body-1];
+
+                [$gptcontent, $imagePath] = $this->conversationalServices->sendDashboard($user, $dashboard->url, $dashboard->name);
+
+                $user->memory = [
+                    'urlimagedash' => $imagePath,
+                    'messages' => [['message' => 'menu', 'kind' => 'user'], ['message' => $request->Body, 'kind' => 'user'], ['message' => $gptcontent, 'kind' => 'gpt']]
+                ];
+                return $user->save();
             }
 
-            $twilio = new Client(config('twilio.account_sid'), config('twilio.auth_token'));
+            $memory = $user->memory['messages'];
+            array_push($memory, ['message' => $request->Body, 'kind' => 'user']);
 
-            return $twilio->messages
-                ->create("whatsapp:{$dashboards->phone}", // to
-                    array(
-                        "from" => "whatsapp:".config('twilio.phone_number'),
-                        "body" => str_replace("**", "*", $message)
-                    )
-                );
+            $gptmessage = $this->conversationalServices->talkToGPT($user, $user->memory['urlimagedash'], $memory);
+
+            array_push($memory, ['message' => $gptmessage, 'kind' => 'gpt']);
+
+            $user->memory = $memory;
+
+            return $user->save();
         }
 
-        if (is_numeric($request->Body))
-        {
-            return $this->conversationalServices->sendDashboard($request, "https://app.powerbi.com/view?r=eyJrIjoiMDM2ZTJjNzItNWYwYy00ZjFlLWI4ZmQtMGQ4Y2FkNmNmMjU1IiwidCI6IjMxMTI4Zjg1LTlmMmUtNDhmNi05NDg0LTBjOWMzY2UzZTUzNiJ9");
-        }
+
 
 
 

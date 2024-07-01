@@ -15,4 +15,11 @@ class Phone extends Model
     {
         return $this->belongsToMany(Dashboard::class);
     }
+
+    protected function casts()
+    {
+        return [
+            'memory' => 'json'
+        ];
+    }
 }

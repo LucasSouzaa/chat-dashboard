@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Phone;
 use HeadlessChromium\BrowserFactory;
 use Illuminate\Support\Facades\Cache;
 use Twilio\Rest\Client;
@@ -9,7 +10,36 @@ use GuzzleHttp\Client as HttpClient;
 
 class ConversationalServices
 {
-    public function sendDashboard($request, $urlToCapture)
+
+    public function showMenu($request, $from)
+    {
+        $apiKey = config('twilio.open_ai_token');
+        $client = \OpenAI::client($apiKey);
+
+        $dashboards = Phone::with('dashboards')->where('phone', $from)->first();
+
+        $message = "Selecione o dashboard que deseja visualizar \n\n";
+
+        foreach($dashboards->dashboards as $key => $dashboard)
+        {
+            $message .= "*" . $key + 1 . ":* " . $dashboard->name . "\n";
+        }
+
+        $twilio = new Client(config('twilio.account_sid'), config('twilio.auth_token'));
+
+        $dashboards->memory = ['messages' => [['message' => 'menu', 'kind' => 'user']]];
+        $dashboards->save();
+
+        return $twilio->messages
+            ->create("whatsapp:{$dashboards->phone}", // to
+                array(
+                    "from" => "whatsapp:".config('twilio.phone_number'),
+                    "body" => str_replace("**", "*", $message)
+                )
+            );
+    }
+
+    public function sendDashboard($user, $urlToCapture, $name)
     {
 
         $browser = (new BrowserFactory()) -> createBrowser();
@@ -44,14 +74,17 @@ class ConversationalServices
                     'content' => [
                         [
                             'type' => 'text',
-                            'text' => "Aja como um analista de BI, e me de um resumo sobre o dashboard na imagem, me de uma resposta de um modo que fique formatado para envio no whatsapp lembrando que negrito no whatsapp usa apenas um asterisco e nao 2, pode usar emojis nos topicos, e também que fique como um assistente enviando as informações, iniciando como 'Segue o resumo de leads' e depois complete com as informacoes do seguinte template, SOME os leads de FACEBOOK E GOOGLE para colocar no template
+                            'text' => "Aja como um analista de BI, e me de um resumo sobre o dashboard na imagem, me de uma resposta de um modo que fique formatado para envio no whatsapp, preencha o template abaixo e me retorne o texto com as informacoes do seguinte dashboard enviado por imagem, SOME os 2 lados da imagem para que no resumo tenha a soma dos leads de Facebook e do Google
+
+                                Segue o resumo de leads de {$name}:
+
                                 Olá!
 
-                                Este é o relatório de performance de sua operação no dia de hoje, XX de XX de 2024.
+                                Este é o relatório de performance de sua operação no dia de hoje, " . now()->day . " de " . now()->month . " de 2024.
 
                                 Vamos lá:
                                 Total de Leads
-                                XXX
+                                XX
 
                                 Visão Geral do Funil
                                 🔘 Trabalhados: XX (XX%)
@@ -83,11 +116,72 @@ class ConversationalServices
         $twilio = new Client(config('twilio.account_sid'), config('twilio.auth_token'));
 
         $message = $twilio->messages
-            ->create("whatsapp:+5516981130663", // to
+            ->create("whatsapp:{$user->phone}", // to
                 array(
                     "from" => "whatsapp:".config('twilio.phone_number'),
                     "body" => str_replace("**", "*", $result->choices[0]->message->content)
                 )
             );
+
+        $gptcontent = $result->choices[0]->message->content;
+        return [$gptcontent, $imagePath];
+    }
+
+    public function talkToGPT($user, $imagePath, $history)
+    {
+        $apiKey = config('twilio.open_ai_token');
+        $base64Image = base64_encode(file_get_contents($imagePath));
+
+        $history = json_encode($history);
+
+        $client = new HttpClient();
+
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer $apiKey",
+        ];
+
+        $payload = [
+            'model' => 'gpt-4o',
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => "Responda baseado no DASHBOARD enviado por imagem e no contexto da conversa passado no seguinte JSON
+                                {$history}
+                            "
+                        ],
+                        [
+                            'type' => 'image_url',
+                            'image_url' => [
+                                'url' => "data:image/jpeg;base64,$base64Image"
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            'max_tokens' => 4096
+        ];
+
+        $response = $client->post('https://api.openai.com/v1/chat/completions', [
+            'headers' => $headers,
+            'json' => $payload,
+        ]);
+
+        $result = json_decode($response->getBody()->getContents());
+
+        $twilio = new Client(config('twilio.account_sid'), config('twilio.auth_token'));
+
+        $message = $twilio->messages
+            ->create("whatsapp:{$user->phone}", // to
+                array(
+                    "from" => "whatsapp:".config('twilio.phone_number'),
+                    "body" => str_replace("**", "*", $result->choices[0]->message->content)
+                )
+            );
+
+        return $result->choices[0]->message->content;
     }
 }

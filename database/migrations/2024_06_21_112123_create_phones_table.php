@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('phone')->unique();
-            $table->text('last_message')->nullable();
+            $table->json('memory')->nullable();
             $table->timestamps();
         });
     }
